@@ -5,6 +5,7 @@ use reqwest::header::{Headers,ContentType,UserAgent};
 use chrono::{ Utc};
 use ring;
 use base64;
+use serde;
 use serde_yaml;
 use num::BigDecimalField;
 
@@ -24,7 +25,12 @@ impl API {
     }
 
     pub fn accounts(&self) -> Result<Vec<Account>> {
-        let req_path = "/accounts";
+        self.private_request("/accounts")
+    }
+
+    fn private_request<T>(&self, req_path: &str) -> Result<T>
+        where T: serde::de::DeserializeOwned
+    {
         let url = self.root.join(req_path).chain_err(|| "url parse")?;
         let body = "{}".to_owned();
         let client = reqwest::Client::new();
@@ -35,7 +41,7 @@ impl API {
         if !resp.status().is_success() {
             bail!("request failed: {} ({})", resp.status(), resp.text()?);
         }
-        let obj: Vec<Account> = resp.json()?;
+        let obj: T = resp.json()?;
         Ok(obj)
     }
 
