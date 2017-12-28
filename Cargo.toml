@@ -1,0 +1,15 @@
+[package]
+name = "gdaxstat"
+version = "0.1.0"
+authors = ["Miles Steele <miles@milessteele.com>"]
+
+[dependencies]
+error-chain = "0.11.0"
+reqwest = "0.8.2"
+chrono = "0.4.0"
+ring = "0.12.1"
+base64 = "0.9.0"
+serde_yaml = "0.7.3"
+serde = "1.0.24"
+serde_derive = "1.0.24"
+bigdecimal = "0.0.10"
