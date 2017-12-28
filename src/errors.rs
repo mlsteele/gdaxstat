@@ -2,6 +2,7 @@ use std;
 use reqwest;
 use serde_yaml;
 use base64;
+use bigdecimal;
 
 // use std;
 // use std::borrow::Borrow;
@@ -20,5 +21,6 @@ error_chain! {
         Reqwest(reqwest::Error);
         SerdeYaml(serde_yaml::Error);
         B64Decode(base64::DecodeError);
+        ParseBigDecimal(bigdecimal::ParseBigDecimalError);
     }
 }

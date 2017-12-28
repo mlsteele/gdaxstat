@@ -6,7 +6,7 @@ pub use bigdecimal::BigDecimal;
 
 #[derive(Clone)]
 pub struct BigDecimalField{
-    val: BigDecimal
+    pub val: BigDecimal
 }
 
 impl BigDecimalField {

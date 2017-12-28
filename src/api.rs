@@ -28,14 +28,35 @@ impl API {
         self.private_request("/accounts")
     }
 
+    pub fn book(&self, product: Product) -> Result<Book> {
+        self.public_request(&format!("/products/{:?}-{:?}/book", product.base, product.quote))
+    }
+
+    fn public_request<T>(&self, req_path: &str) -> Result<T>
+        where T: serde::de::DeserializeOwned
+    {
+        self.request(false, req_path)
+    }
+
     fn private_request<T>(&self, req_path: &str) -> Result<T>
+        where T: serde::de::DeserializeOwned
+    {
+        self.request(true, req_path)
+    }
+
+    fn request<T>(&self, private: bool, req_path: &str) -> Result<T>
         where T: serde::de::DeserializeOwned
     {
         let url = self.root.join(req_path).chain_err(|| "url parse")?;
         let body = "{}".to_owned();
         let client = reqwest::Client::new();
+        let headers = if private {
+            self.private_headers("GET", req_path, &body)?
+        } else {
+            self.headers()
+        };
         let req = client.request(Method::Get, url)
-            .headers(self.private_headers("GET", req_path, &body)?)
+            .headers(headers)
             .body(body).build()?;
         let mut resp = client.execute(req)?;
         if !resp.status().is_success() {
@@ -82,7 +103,7 @@ impl API {
 
 pub type AccountID = String;
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum Currency {
     USD,
     BTC,
@@ -91,11 +112,31 @@ pub enum Currency {
     LTC,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Product {
+    pub base: Currency,
+    pub quote: Currency,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Account {
     pub id: AccountID,
     pub currency: Currency,
     pub balance: BigDecimalField,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Book {
+    pub sequence: i64,
+    pub bids: Vec<BookEntry>,
+    pub asks: Vec<BookEntry>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BookEntry {
+    pub price: BigDecimalField,
+    pub size: BigDecimalField,
+    pub num_orders: i64,
 }
 
 pub struct Secrets {
