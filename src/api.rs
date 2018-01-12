@@ -55,12 +55,12 @@ impl API {
         } else {
             self.headers()
         };
-        let req = client.request(Method::Get, url)
+        let req = client.request(Method::Get, url.clone())
             .headers(headers)
             .body(body).build()?;
         let mut resp = client.execute(req)?;
         if !resp.status().is_success() {
-            bail!("request failed: {} ({})", resp.status(), resp.text()?);
+            bail!("request failed: {} ({}) ({})", resp.status(), resp.text()?, url);
         }
         let obj: T = resp.json()?;
         Ok(obj)

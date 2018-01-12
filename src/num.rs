@@ -1,8 +1,13 @@
 use std::fmt;
+use std::str::FromStr;
 use serde;
 use serde::{Serialize,Serializer,Deserialize,Deserializer};
 use serde::de::{Visitor};
 pub use bigdecimal::BigDecimal;
+
+pub fn zero() -> BigDecimal {
+    BigDecimal::from_str("0").expect("zero value bigdecimal")
+}
 
 #[derive(Clone)]
 pub struct BigDecimalField{

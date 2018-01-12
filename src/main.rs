@@ -24,22 +24,44 @@ use Currency::*;
 fn main() {
     if let Err(err) = main2() {
         println!("Error: {}", err);
+        if let Some(trace) = err.backtrace() {
+            println!("{:?}", trace);
+        }
         std::process::exit(1);
     }
+}
+
+struct Account {
+    pub currency: Currency,
+    pub balance: BigDecimal, // in currency units
+    pub value_usd: BigDecimal, // in USD
 }
 
 fn main2() -> Result<()> {
     let secrets = api::Secrets::from_file("secrets.yaml")?;
     let api = API::new(Some(secrets));
+    let mut accounts = Vec::new();
     for account in api.accounts()? {
+        accounts.push(Account{
+            currency:  account.currency,
+            balance:   account.balance.val.clone(),
+            value_usd: if account.currency != USD {
+                convert(&api, account.balance.val, account.currency, USD)?
+            } else {
+                account.balance.val
+            }
+        });
+    }
+    for account in &accounts {
         println!("Currency: {:?}", account.currency);
-        println!("Balance: {:?} {:?}", account.balance, account.currency);
+        println!("Balance: {} {:?}", account.balance, account.currency);
         if account.currency != USD {
-            println!("Balance: ${} (market value)",
-                     convert(&api, account.balance.val, account.currency, USD)?);
+            println!("Balance: ${} (market value)", account.value_usd);
         }
         println!("");
     }
+    let total_usd = accounts.iter().map(|a| a.value_usd.clone()).fold(num::zero(), |acc, b| acc + b);
+    println!("total: ${} (market value)", total_usd);
     Ok(())
 }
 
